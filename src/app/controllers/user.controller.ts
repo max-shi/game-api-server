@@ -1,9 +1,19 @@
-import {Request, Response} from "express";
+import { Request, Response } from "express";
 import Logger from '../../config/logger';
 import * as User from "../models/user.model";
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
+/**
+ * Registers a new user.
+ *
+ * Validates required fields (firstName, lastName, email, and password), checks email format and password length,
+ * and prevents duplicate emails. Hashes the password, creates a new user, and returns the user's ID.
+ *
+ * @param req Express request object with registration details.
+ * @param res Express response object.
+ * @returns Promise resolving when registration is complete.
+ */
 const register = async (req: Request, res: Response): Promise<void> => {
     try {
         const { firstName, lastName, email, password } = req.body;
@@ -56,6 +66,16 @@ const register = async (req: Request, res: Response): Promise<void> => {
     }
 }
 
+/**
+ * Authenticates a user.
+ *
+ * Checks for email and password, verifies the user, and compares the password using bcrypt.
+ * Generates a token, updates the user record, and returns the user ID and token.
+ *
+ * @param req Express request object with login credentials.
+ * @param res Express response object.
+ * @returns Promise resolving when login is complete.
+ */
 const login = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password } = req.body;
@@ -99,6 +119,16 @@ const login = async (req: Request, res: Response): Promise<void> => {
     }
 }
 
+/**
+ * Logs out a user.
+ *
+ * Retrieves the token from the header, finds the associated user, clears the token from the user record,
+ * and returns a 200 OK status.
+ *
+ * @param req Express request object with the 'X-Authorization' token.
+ * @param res Express response object.
+ * @returns Promise resolving when logout is complete.
+ */
 const logout = async (req: Request, res: Response): Promise<void> => {
     try {
         // Retrieve the token from the header
@@ -129,7 +159,16 @@ const logout = async (req: Request, res: Response): Promise<void> => {
     }
 }
 
-
+/**
+ * Retrieves user details.
+ *
+ * Gets the user by ID from the URL. If the request contains a valid token for that user,
+ * returns full details; otherwise, only returns the first and last names.
+ *
+ * @param req Express request object with user ID and optional token.
+ * @param res Express response object.
+ * @returns Promise resolving when user details are returned.
+ */
 const view = async (req: Request, res: Response): Promise<void> => {
     try {
         // Parse the user ID from the URL parameter.
@@ -173,7 +212,17 @@ const view = async (req: Request, res: Response): Promise<void> => {
     }
 }
 
-
+/**
+ * Updates a user's details.
+ *
+ * Validates and updates the user's information (firstName, lastName, email, and password).
+ * Checks for a valid token and, if changing the password, verifies the current password.
+ * Responds with a 200 OK status if the update is successful.
+ *
+ * @param req Express request object with user ID and update fields.
+ * @param res Express response object.
+ * @returns Promise resolving when the update is complete.
+ */
 const update = async (req: Request, res: Response): Promise<void> => {
     try {
         // Parse and validate the user ID from the URL parameter.
@@ -310,5 +359,4 @@ const update = async (req: Request, res: Response): Promise<void> => {
     }
 }
 
-
-export {register, login, logout, view, update}
+export { register, login, logout, view, update }
