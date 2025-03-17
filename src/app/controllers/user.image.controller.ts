@@ -26,7 +26,6 @@ const getImage = async (req: Request, res: Response): Promise<void> => {
             res.status(404).send();
         } else {
             res.statusMessage = "Internal Server Error";
-            Logger.info("internal server error 1");
             res.status(500).send();
         }
     }
@@ -90,7 +89,6 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
         }
         else {
             res.statusMessage = "Internal Server Error";
-            Logger.info("internal server error 2");
             res.status(500).send();
         }
     }
@@ -115,13 +113,11 @@ const deleteImage = async (req: Request, res: Response): Promise<void> => {
     } catch (err) {
         Logger.error(err);
         if (err.message.includes("User not found")) {
-            Logger.info("User not found -- good flow");
             res.statusMessage = "User not found";
             res.status(404).send();
         } else {
             res.statusMessage = "Internal Server Error";
             Logger.info(err.message);
-            Logger.info("internal server error 3");
             res.status(500).send();
         }
     }
