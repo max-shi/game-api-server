@@ -2,6 +2,16 @@ import { Request, Response } from "express";
 import Logger from "../../config/logger";
 import * as userImage from "../models/user.image.model";
 
+
+/**
+ * Obtains the Image given user details
+ *
+ * Validates that the User ID is correct by checking if it is an Integer (via isNaN)
+ * Additional checks for wether the given user ID has an image or not
+ *
+ * @param req Express request object.
+ * @param res Express response object.
+ */
 const getImage = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = parseInt(req.params.id, 10);
