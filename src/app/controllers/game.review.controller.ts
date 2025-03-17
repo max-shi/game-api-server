@@ -12,7 +12,6 @@ const getGameReviews = async(req: Request, res: Response): Promise<void> => {
         res.status(500).send();
     }
 }
-
 const addGameReview = async(req: Request, res: Response): Promise<void> => {
     try {
         res.statusMessage = "Not Implemented";
