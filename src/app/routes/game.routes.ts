@@ -1,15 +1,16 @@
-import {Express} from "express";
-import {rootUrl} from "./base.routes";
-import * as gameController from '../controllers/game.controller'
-import * as gameReviewController from '../controllers/game.review.controller'
-import * as gameActionController from '../controllers/game.action.controller'
-import * as gameImageController from '../controllers/game.image.controller'
-
+import { Express } from "express";
+import { rootUrl } from "./base.routes";
+import * as gameController from '../controllers/game.controller';
+import * as gameReviewController from '../controllers/game.review.controller';
+import * as gameActionController from '../controllers/game.action.controller';
+import * as gameImageController from '../controllers/game.image.controller';
+import { validateGameRequest, validateGameId, validateAuthToken } from "../middleware/game.middleware";
 
 module.exports = (app: Express) => {
+    // Routes without a game id in the URL.
     app.route(rootUrl + '/games')
         .get(gameController.getAllGames)
-        .post(gameController.addGame);
+        .post(validateAuthToken, gameController.addGame); // Requires authentication.
 
     app.route(rootUrl + '/games/genres')
         .get(gameController.getGenres);
@@ -17,25 +18,25 @@ module.exports = (app: Express) => {
     app.route(rootUrl + '/games/platforms')
         .get(gameController.getPlatforms);
 
-    app.route(rootUrl+'/games/:id')
-        .get(gameController.getGame)
-        .patch(gameController.editGame)
-        .delete(gameController.deleteGame);
+    // Routes with a game id.
+    app.route(rootUrl + '/games/:id')
+        .get(validateGameId, gameController.getGame)
+        .patch(validateGameRequest, gameController.editGame)
+        .delete(validateGameRequest, gameController.deleteGame);
 
     app.route(rootUrl + '/games/:id/reviews')
-        .get(gameReviewController.getGameReviews)
-        .post(gameReviewController.addGameReview);
+        .get(validateGameId, gameReviewController.getGameReviews) // Validate game id.
+        .post(validateGameRequest, gameReviewController.addGameReview); // Validate game id and auth.
 
     app.route(rootUrl + '/games/:id/wishlist')
-        .post(gameActionController.addGameToWishlist)
-        .delete(gameActionController.removeGameFromWishlist);
+        .post(validateGameRequest, gameActionController.addGameToWishlist)
+        .delete(validateGameRequest, gameActionController.removeGameFromWishlist);
 
     app.route(rootUrl + '/games/:id/owned')
-        .post(gameActionController.addGameToOwned)
-        .delete(gameActionController.removeGameFromOwned);
+        .post(validateGameRequest, gameActionController.addGameToOwned)
+        .delete(validateGameRequest, gameActionController.removeGameFromOwned);
 
     app.route(rootUrl + '/games/:id/image')
-        .get(gameImageController.getImage)
-        .put(gameImageController.setImage);
-
-}
+        .get(validateGameId, gameImageController.getImage)
+        .put(validateGameRequest, gameImageController.setImage);
+};
