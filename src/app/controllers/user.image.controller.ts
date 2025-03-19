@@ -31,7 +31,6 @@ const getImage = async (req: Request, res: Response): Promise<void> => {
 
 /**
  * Sets (or replaces) a user's profile image.
- * Assumes middleware has validated the user id and token and authorized the user.
  */
 const setImage = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -55,7 +54,6 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
             res.status(400).send();
             return;
         }
-        // Call the model function using the authenticated user's id.
         const isNew = await userImage.setUserImage(authUser.id, userId, imageBuffer, contentType);
         if (isNew) {
             res.status(201).send();

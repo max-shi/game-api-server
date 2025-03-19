@@ -154,7 +154,6 @@ const update = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = (req as any).userId as number;
         const { firstName, lastName, email, password, currentPassword } = req.body;
-
         // Validate firstName.
         if (firstName !== undefined) {
             if (typeof firstName !== 'string' || firstName.trim().length === 0 || firstName.length > 64) {
@@ -202,6 +201,7 @@ const update = async (req: Request, res: Response): Promise<void> => {
             if (password === currentPassword) {
                 res.statusMessage = "New password must be different from current password";
                 res.status(403).send();
+                // TODO does this status code make sense?
                 return;
             }
             if (password.length < 6 || currentPassword.length < 6) {
@@ -229,12 +229,10 @@ const update = async (req: Request, res: Response): Promise<void> => {
         if (lastName !== undefined) updateData.lastName = lastName;
         if (email !== undefined) updateData.email = email;
         if (newPasswordHash !== undefined) updateData.password = newPasswordHash;
-
         if (Object.keys(updateData).length === 0) {
             res.status(200).send();
             return;
         }
-
         await User.updateUserDetails(userId, updateData);
         res.status(200).send();
     } catch (err) {

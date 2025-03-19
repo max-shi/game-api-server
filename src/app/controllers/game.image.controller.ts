@@ -8,7 +8,6 @@ import { GameRequest } from "../middleware/game.middleware";
  */
 const getImage = async (req: Request, res: Response): Promise<void> => {
     try {
-        // Use validateGameId to obtain req.gameId.
         const gameId = (req as any).gameId as number;
         const imageResult = await GameImage.getGameImage(gameId);
         if (!imageResult) {

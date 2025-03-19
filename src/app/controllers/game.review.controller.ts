@@ -9,7 +9,6 @@ import { GameRequest } from "../middleware/game.middleware";
  */
 const getGameReviews = async (req: Request, res: Response): Promise<void> => {
     try {
-        // Using validateGameId middleware so req.gameId is available.
         const gameId = (req as any).gameId as number;
         const reviews = await ReviewModel.getReviewsByGameId(gameId);
         res.status(200).json(reviews);
@@ -30,7 +29,6 @@ const getGameReviews = async (req: Request, res: Response): Promise<void> => {
  */
 const addGameReview = async (req: Request, res: Response): Promise<void> => {
     try {
-        // Using validateGameRequest middleware so req.gameId and req.user are available.
         const { gameId, user } = req as GameRequest;
         const { rating, review } = req.body;
         if (rating === undefined) {
