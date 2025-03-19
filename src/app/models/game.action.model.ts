@@ -52,7 +52,7 @@ export const addGameToWishlistModel = async (userId: number, gameId: number): Pr
         throw new Error("Cannot wishlist a game you have marked as owned");
     }
     if (await isGameWishlistedByUser(userId, gameId)) {
-        // Already wishlisted – silently succeed (or you may choose to return an error)
+        // Already wishlisted – silently succeed
         return;
     }
     const insertQuery = "INSERT INTO wishlist (game_id, user_id) VALUES (?, ?)";

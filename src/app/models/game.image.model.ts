@@ -4,6 +4,7 @@ import Logger from "../../config/logger";
 import { getPool } from "../../config/db";
 
 // Directory where game cover images are stored.
+// TODO recheck this directory works on lab machines
 const GAME_IMAGE_DIR = path.join(__dirname, "..", "..", "..", "storage", "images");
 
 export async function getGameImage(gameId: number): Promise<{ data: Buffer; contentType: string } | null> {
@@ -22,7 +23,7 @@ export async function getGameImage(gameId: number): Promise<{ data: Buffer; cont
         try {
             await fs.access(fullPath);
         } catch {
-            return null; // File does not exist on disk.
+            return null;
         }
         const data = await fs.readFile(fullPath);
         const ext = path.extname(imageFileName).toLowerCase();

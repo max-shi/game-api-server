@@ -43,7 +43,7 @@ export async function getUserImage(id: number): Promise<{ data: Buffer; contentT
  *
  */
 export async function setUserImage(
-    userId: number,  // Now a user id, not a token.
+    userId: number,
     id: number,
     imageBuffer: Buffer,
     contentType: string

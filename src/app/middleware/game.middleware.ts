@@ -39,6 +39,7 @@ export const validateAuthToken = async (req: Request, res: Response, next: NextF
     next();
 };
 
+// TODO, can we make it such that we can simply do validateAuthToken then validateGameId, instead of making a whole new middleware
 // Middleware to validate both game id and authentication token.
 export const validateGameRequest = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const gameId = parseInt(req.params.id, 10);
