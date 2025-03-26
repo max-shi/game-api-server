@@ -273,7 +273,7 @@ const getGenres = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * gets the platforms (returns as a json)
+ * gets the platforms
  */
 const getPlatforms = async (req: Request, res: Response): Promise<void> => {
     try {

@@ -1,13 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import * as User from "../models/user.model";
 
-// Extend Request to include a validated user ID.
-export interface UserRequest extends Request {
+interface UserRequest extends Request {
     userId: number;
 }
 
-// Extend Request to include the authenticated user.
-export interface AuthenticatedUserRequest extends Request {
+interface AuthenticatedUserRequest extends Request {
     user: any;
 }
 
@@ -15,7 +13,7 @@ export interface AuthenticatedUserRequest extends Request {
  * Middleware to validate the user id parameter.
  * If valid, attaches it as req.userId.
  */
-export const validateUserId = (req: Request, res: Response, next: NextFunction): void => {
+const validateUserId = (req: Request, res: Response, next: NextFunction): void => {
     const userId = parseInt(req.params.id, 10);
     if (isNaN(userId) || userId < 0) {
         res.statusMessage = "Invalid user id";
@@ -31,7 +29,7 @@ export const validateUserId = (req: Request, res: Response, next: NextFunction):
  * Expects the token to be in the "X-Authorization" header.
  * If valid, attaches the user to req.user.
  */
-export const validateUserAuthToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+const validateUserAuthToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const token = req.get("X-Authorization");
     if (!token) {
         res.statusMessage = "Unauthorized: No token provied";
@@ -52,7 +50,7 @@ export const validateUserAuthToken = async (req: Request, res: Response, next: N
  * Middleware to authorize that the authenticated user (req.user)
  * is the same as the user whose id is in the URL (req.userId).
  */
-export const authorizeUser = (req: Request, res: Response, next: NextFunction): void => {
+const authorizeUser = (req: Request, res: Response, next: NextFunction): void => {
     const authReq = req as AuthenticatedUserRequest & UserRequest;
     if (!authReq.user || authReq.user.id !== authReq.userId) {
         res.statusMessage = "Forbidden: You cannot edit another user's information";
@@ -61,3 +59,5 @@ export const authorizeUser = (req: Request, res: Response, next: NextFunction): 
     }
     next();
 };
+
+export { authorizeUser, validateUserId, validateUserAuthToken, UserRequest, AuthenticatedUserRequest}

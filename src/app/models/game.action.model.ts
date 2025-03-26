@@ -5,7 +5,7 @@ import Logger from "../../config/logger";
  * Helper: Returns the creator id of a game given its id.
  * Returns null if no such game exists.
  */
-export const getGameCreatorId = async (gameId: number): Promise<number | null> => {
+const getGameCreatorId = async (gameId: number): Promise<number | null> => {
     const pool = getPool();
     const query = "SELECT creator_id FROM game WHERE id = ?";
     const [rows] = await pool.query(query, [gameId]);
@@ -16,7 +16,7 @@ export const getGameCreatorId = async (gameId: number): Promise<number | null> =
 /**
  * Helper: Checks if the user has already marked the game as owned.
  */
-export const isGameOwnedByUser = async (userId: number, gameId: number): Promise<boolean> => {
+const isGameOwnedByUser = async (userId: number, gameId: number): Promise<boolean> => {
     const pool = getPool();
     const query = "SELECT 1 FROM owned WHERE user_id = ? AND game_id = ?";
     const [rows] = await pool.query(query, [userId, gameId]);
@@ -26,7 +26,7 @@ export const isGameOwnedByUser = async (userId: number, gameId: number): Promise
 /**
  * Helper: Checks if the user has already wishlisted the game.
  */
-export const isGameWishlistedByUser = async (userId: number, gameId: number): Promise<boolean> => {
+const isGameWishlistedByUser = async (userId: number, gameId: number): Promise<boolean> => {
     const pool = getPool();
     const query = "SELECT 1 FROM wishlist WHERE user_id = ? AND game_id = ?";
     const [rows] = await pool.query(query, [userId, gameId]);
@@ -38,7 +38,7 @@ export const isGameWishlistedByUser = async (userId: number, gameId: number): Pr
  * Validates that the game exists, that the user is not its creator,
  * and that the game is not already owned by the user.
  */
-export const addGameToWishlistModel = async (userId: number, gameId: number): Promise<void> => {
+const addGameToWishlistModel = async (userId: number, gameId: number): Promise<void> => {
     const pool = getPool();
 
     const creatorId = await getGameCreatorId(gameId);
@@ -62,7 +62,7 @@ export const addGameToWishlistModel = async (userId: number, gameId: number): Pr
 /**
  * Removes a game from the user's wishlist.
  */
-export const removeGameFromWishlistModel = async (userId: number, gameId: number): Promise<void> => {
+const removeGameFromWishlistModel = async (userId: number, gameId: number): Promise<void> => {
     const pool = getPool();
     if (!(await isGameWishlistedByUser(userId, gameId))) {
         throw new Error("Game is not wishlisted by the user");
@@ -76,7 +76,7 @@ export const removeGameFromWishlistModel = async (userId: number, gameId: number
  * Validates that the game exists and that the user is not its creator.
  * If the game is currently wishlisted by the user, it is removed from wishlist.
  */
-export const addGameToOwnedModel = async (userId: number, gameId: number): Promise<void> => {
+const addGameToOwnedModel = async (userId: number, gameId: number): Promise<void> => {
     const pool = getPool();
 
     const creatorId = await getGameCreatorId(gameId);
@@ -102,7 +102,7 @@ export const addGameToOwnedModel = async (userId: number, gameId: number): Promi
 /**
  * Unmarks a game as owned for the given user.
  */
-export const removeGameFromOwnedModel = async (userId: number, gameId: number): Promise<void> => {
+const removeGameFromOwnedModel = async (userId: number, gameId: number): Promise<void> => {
     const pool = getPool();
     if (!(await isGameOwnedByUser(userId, gameId))) {
         throw new Error("Game is not marked as owned by the user");
@@ -110,3 +110,5 @@ export const removeGameFromOwnedModel = async (userId: number, gameId: number): 
     const deleteQuery = "DELETE FROM owned WHERE game_id = ? AND user_id = ?";
     await pool.query(deleteQuery, [gameId, userId]);
 };
+
+export { getGameCreatorId, isGameOwnedByUser, isGameWishlistedByUser, addGameToWishlistModel, removeGameFromWishlistModel, addGameToOwnedModel, removeGameFromOwnedModel }

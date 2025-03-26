@@ -1,7 +1,7 @@
 import { getPool } from "../../config/db";
 import Logger from "../../config/logger";
 
-export const getReviewsByGameId = async (gameId: number): Promise<any[]> => {
+const getReviewsByGameId = async (gameId: number): Promise<any[]> => {
     const pool = getPool();
 
     // Check if the game exists.
@@ -29,7 +29,7 @@ export const getReviewsByGameId = async (gameId: number): Promise<any[]> => {
     return reviewRows as any[];
 };
 
-export const addReview = async (
+const addReview = async (
     userId: number,
     gameId: number,
     rating: number,
@@ -64,3 +64,5 @@ export const addReview = async (
     const insertQuery = "INSERT INTO game_review (game_id, user_id, rating, review) VALUES (?, ?, ?, ?)";
     await pool.query(insertQuery, [gameId, userId, rating, review || null]);
 };
+
+export { getReviewsByGameId, addReview };

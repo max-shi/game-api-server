@@ -1,16 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import * as User from "../models/user.model";
 
-export interface AuthenticatedRequest extends Request {
+interface AuthenticatedRequest extends Request {
     user: any;
 }
 
-export interface GameRequest extends AuthenticatedRequest {
+interface GameRequest extends AuthenticatedRequest {
     gameId: number;
 }
 
-// Middleware to validate game id parameter only.
-export const validateGameId = (req: Request, res: Response, next: NextFunction): void => {
+/**
+ * Middleware to validate game id parameter only.
+ */
+const validateGameId = (req: Request, res: Response, next: NextFunction): void => {
     const gameId = parseInt(req.params.id, 10);
     if (isNaN(gameId) || gameId < 0) {
         res.statusMessage = "Invalid game id";
@@ -21,8 +23,10 @@ export const validateGameId = (req: Request, res: Response, next: NextFunction):
     next();
 };
 
-// Middleware to validate authentication token only.
-export const validateAuthToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+/**
+ * Middleware to validate authentication token only.
+ */
+const validateAuthToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const token = req.get("X-Authorization");
     if (!token) {
         res.statusMessage = "Unauthorized: No token provided";
@@ -41,7 +45,7 @@ export const validateAuthToken = async (req: Request, res: Response, next: NextF
 
 // TODO, can we make it such that we can simply do validateAuthToken then validateGameId, instead of making a whole new middleware
 // Middleware to validate both game id and authentication token.
-export const validateGameRequest = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+const validateGameRequest = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const gameId = parseInt(req.params.id, 10);
     if (isNaN(gameId) || gameId < 0) {
         res.statusMessage = "Invalid game id";
@@ -64,3 +68,5 @@ export const validateGameRequest = async (req: Request, res: Response, next: Nex
     (req as GameRequest).user = user;
     next();
 };
+
+export { validateGameId, validateAuthToken, validateGameRequest, AuthenticatedRequest,  GameRequest };
