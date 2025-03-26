@@ -22,16 +22,15 @@ const parseNonNegativeInteger = (
 
 const parseNonNegativeIntegerNotDefault = (
     value: any,
-    name: string
+    name: string,
 ): number => {
     if (value === undefined || value === null) {
         throw new Error(`Type Error: Invalid ${name}: cannot be null`);
     }
-    const parsed = parseInt(value as string, 10);
-    if (isNaN(parsed) || parsed < 0) {
+    if (typeof value !== "number" || isNaN(value) || value < 0) {
         throw new Error(`Type Error: Invalid ${name}: must be a non-negative integer`);
     }
-    return parsed;
+    return value;
 }
 
 const parseStringNotNullOrEmpty = (
@@ -206,11 +205,14 @@ const addGame = async (req: Request, res: Response): Promise<void> => {
 const editGame = async (req: Request, res: Response): Promise<void> => {
     try {
         const { gameId, user } = req as GameRequest;
-        const { title, description, genreId, price, platforms } = req.body;
-        if (!title || !description || genreId === undefined || price === undefined || !platforms || price < 0 || genreId < 0) {
-            res.statusMessage = "Missing required game parameters";
+        const title = parseStringNotNullOrEmpty(req.body.title, "title");
+        const description = parseStringNotNullOrEmpty(req.body.description, "description");
+        const price = parseNonNegativeIntegerNotDefault(req.body.price, "price");
+        const genreId = parseNonNegativeIntegerNotDefault(req.body.genreId, "genreId");
+        const {platforms } = req.body;
+        if (!Array.isArray(platforms) || platforms.length === 0) {
+            res.statusMessage = "platformIds must be a non-empty array";
             res.status(400).send();
-            return;
         }
         const updatedData: {
             title?: string;

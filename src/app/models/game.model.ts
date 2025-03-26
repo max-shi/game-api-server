@@ -291,10 +291,6 @@ const editGame = async (
         updateFields.push("description = ?");
         updateValues.push(updatedData.description);
     }
-    if (updatedData.genreId !== undefined) {
-        updateFields.push("genre_id = ?");
-        updateValues.push(updatedData.genreId);
-    }
     if (updatedData.price !== undefined) {
         updateFields.push("price = ?");
         updateValues.push(updatedData.price);
