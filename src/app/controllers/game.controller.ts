@@ -140,9 +140,10 @@ const addGame = async (req: Request, res: Response): Promise<void> => {
             res.status(401).send();
             return;
         }
-        // TODO use the uhhh helper functions
-        const { title, description, genreId, price, platformIds } = req.body;
-        if (!title || !description || genreId === undefined || price === undefined || !platformIds || price < 0 || genreId < 0) {
+        const { title, description, platformIds } = req.body;
+        const genreId = parseNonNegativeInteger(req.body.genreId, "genreId", 0);
+        const price = parseNonNegativeInteger(req.body.price, "price", 0);
+        if (!title || !description || genreId === undefined || price === undefined || !platformIds ) {
             res.statusMessage = "Missing required game parameters";
             res.status(400).send();
             return;
