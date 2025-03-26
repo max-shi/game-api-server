@@ -373,7 +373,7 @@ const createGame = async (
     creatorId: number
 ): Promise<number> => {
     const pool = getPool();
-
+    // TODO put this error checking in controller
     // Validate that the provided genre exists.
     const [genreRows] = await pool.query("SELECT id FROM genre WHERE id = ?", [gameData.genreId]);
     if ((genreRows as any[]).length === 0) {
