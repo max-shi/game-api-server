@@ -7,7 +7,7 @@ import { getPool } from "../../config/db";
 // TODO recheck this directory works on lab machines
 const GAME_IMAGE_DIR = path.join(__dirname, "..", "..", "..", "storage", "images");
 
-export async function getGameImage(gameId: number): Promise<{ data: Buffer; contentType: string } | null> {
+async function getGameImage(gameId: number): Promise<{ data: Buffer; contentType: string } | null> {
     try {
         const pool = getPool();
         const query = "SELECT image_filename FROM game WHERE id = ?";
@@ -42,7 +42,7 @@ export async function getGameImage(gameId: number): Promise<{ data: Buffer; cont
     }
 }
 
-export async function setGameImage(
+async function setGameImage(
     userId: number,
     gameId: number,
     imageBuffer: Buffer,
@@ -99,4 +99,6 @@ export async function setGameImage(
     // Return true if there was no previous image.
     const isNew = !oldImageFilename;
     return isNew;
-}
+};
+
+export { getGameImage, setGameImage }

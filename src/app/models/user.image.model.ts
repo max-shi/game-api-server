@@ -5,7 +5,7 @@ import { getPool } from "../../config/db";
 
 const IMAGE_DIR = path.join(__dirname, "..", "..", "..", "storage", "images");
 
-export async function getUserImage(id: number): Promise<{ data: Buffer; contentType: string } | null> {
+async function getUserImage(id: number): Promise<{ data: Buffer; contentType: string } | null> {
     try {
         const pool = getPool();
         const query = "SELECT image_filename FROM user WHERE id = ?";
@@ -42,7 +42,7 @@ export async function getUserImage(id: number): Promise<{ data: Buffer; contentT
  * Sets or replaces a user's profile image.
  *
  */
-export async function setUserImage(
+async function setUserImage(
     userId: number,
     id: number,
     imageBuffer: Buffer,
@@ -103,7 +103,7 @@ export async function setUserImage(
     return isNew;
 }
 
-export async function deleteUserImage(id: number): Promise<boolean> {
+async function deleteUserImage(id: number): Promise<boolean> {
     const pool = getPool();
     const query = "SELECT image_filename FROM user WHERE id = ?";
     const [rows] = await pool.query(query, [id]);
@@ -122,3 +122,5 @@ export async function deleteUserImage(id: number): Promise<boolean> {
     await pool.query(updateQuery, [id]);
     return true;
 }
+
+export { getUserImage, setUserImage, deleteUserImage }

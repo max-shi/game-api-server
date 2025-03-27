@@ -20,6 +20,32 @@ const parseNonNegativeInteger = (
     return parsed;
 };
 
+const parseNonNegativeIntegerNotDefault = (
+    value: any,
+    name: string,
+): number => {
+    if (value === undefined || value === null) {
+        throw new Error(`Type Error: Invalid ${name}: cannot be null`);
+    }
+    if (typeof value !== "number" || isNaN(value) || value < 0) {
+        throw new Error(`Type Error: Invalid ${name}: must be a non-negative integer`);
+    }
+    return value;
+}
+
+const parseStringNotNullOrEmpty = (
+    value: any,
+    name: string,
+): string => {
+    if (value === undefined || value === null) {
+        throw new Error('Type Error: Invalid string');
+    }
+    const trimmedValue = typeof value === "string" ? value.trim() : String(value).trim();
+    if (trimmedValue === "") {
+        throw new Error(`Type Error: Invalid : ${name} cannot be empty`);
+    }
+    return value;
+}
 
 /**
  * helper function to parse an array
@@ -140,14 +166,11 @@ const addGame = async (req: Request, res: Response): Promise<void> => {
             res.status(401).send();
             return;
         }
-
-        const { title, description, genreId, price, platformIds } = req.body;
-        if (!title || !description || genreId === undefined || price === undefined || !platformIds) {
-            res.statusMessage = "Missing required game parameters";
-            res.status(400).send();
-            return;
-        }
-
+        const price = parseNonNegativeIntegerNotDefault(req.body.price, "price");
+        const genreId = parseNonNegativeIntegerNotDefault(req.body.genreId, "genreId");
+        const title = parseStringNotNullOrEmpty(req.body.title, "title");
+        const description = parseStringNotNullOrEmpty(req.body.description, "description");
+        const platformIds = req.body.platformIds;
         if (!Array.isArray(platformIds) || platformIds.length === 0) {
             res.statusMessage = "platformIds must be a non-empty array";
             res.status(400).send();
@@ -164,7 +187,8 @@ const addGame = async (req: Request, res: Response): Promise<void> => {
             err.message.includes("Data too long for column") ||
             err.message.includes("Invalid genreId") ||
             err.message.includes("One or more platformIds") ||
-            err.message.includes("At least one platform")
+            err.message.includes("At least one platform") ||
+            err.message.includes("Type Error")
         ) {
             res.status(400).send(err.message);
         } else {
@@ -181,7 +205,15 @@ const addGame = async (req: Request, res: Response): Promise<void> => {
 const editGame = async (req: Request, res: Response): Promise<void> => {
     try {
         const { gameId, user } = req as GameRequest;
-        const { title, description, genreId, price, platforms } = req.body;
+        const title = parseStringNotNullOrEmpty(req.body.title, "title");
+        const description = parseStringNotNullOrEmpty(req.body.description, "description");
+        const price = parseNonNegativeIntegerNotDefault(req.body.price, "price");
+        const genreId = parseNonNegativeIntegerNotDefault(req.body.genreId, "genreId");
+        const {platforms } = req.body;
+        if (!Array.isArray(platforms) || platforms.length === 0) {
+            res.statusMessage = "platformIds must be a non-empty array";
+            res.status(400).send();
+        }
         const updatedData: {
             title?: string;
             description?: string;
@@ -189,12 +221,11 @@ const editGame = async (req: Request, res: Response): Promise<void> => {
             price?: number;
             platforms?: number[];
         } = {};
-
-        if (title !== undefined) updatedData.title = title;
-        if (description !== undefined) updatedData.description = description;
-        if (genreId !== undefined) updatedData.genreId = genreId;
-        if (price !== undefined) updatedData.price = price;
-        if (platforms !== undefined) updatedData.platforms = platforms;
+        updatedData.title = title;
+        updatedData.description = description;
+        updatedData.genreId = genreId;
+        updatedData.price = price;
+        updatedData.platforms = platforms;
 
         if (Object.keys(updatedData).length === 0) {
             res.statusMessage = "No update fields provided";
@@ -214,8 +245,9 @@ const editGame = async (req: Request, res: Response): Promise<void> => {
         } else if (
             err.message.includes("Invalid genreId") ||
             err.message.includes("platforms") ||
-            err.message.includes("One or more platformIds are invalid")
-        ) {
+            err.message.includes("One or more platformIds are invalid") ||
+            err.message.includes("Type Error"))
+         {
             res.status(400).send(err.message);
         } else {
             Logger.error(err);
@@ -273,7 +305,7 @@ const getGenres = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * gets the platforms (returns as a json)
+ * gets the platforms
  */
 const getPlatforms = async (req: Request, res: Response): Promise<void> => {
     try {

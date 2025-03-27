@@ -4,7 +4,7 @@ import * as GameImage from "../models/game.image.model";
 import { GameRequest } from "../middleware/game.middleware";
 
 /**
- * gets the cover image for the specified game.
+ * gets the image for the specified game.
  */
 const getImage = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -32,7 +32,7 @@ const getImage = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * sets (or replaces) the cover image for the specified game.
+ * sets (or replaces) the image for the specified game.
  */
 const setImage = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -58,7 +58,6 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
             res.status(400).send();
             return;
         }
-        // Call model function, passing the authenticated user's id.
         const isNew = await GameImage.setGameImage(user.id, gameId, imageBuffer, contentType);
         if (isNew) {
             res.status(201).send();
