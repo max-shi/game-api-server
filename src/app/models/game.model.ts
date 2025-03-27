@@ -449,19 +449,42 @@ const getAllPlatforms = async (): Promise<{ platformId: number; name: string }[]
 const deleteGameById = async (gameId: number): Promise<void> => {
     const pool = getPool();
 
-    // Check if the game has one or more reviews.
-    const reviewQuery = "SELECT COUNT(*) AS reviewCount FROM game_review WHERE game_id = ?";
-    const [reviewRows] = await pool.query(reviewQuery, [gameId]);
-    const reviewCount = (reviewRows as any[])[0].reviewCount;
-    if (reviewCount > 0) {
-        throw new Error("Game has reviews");
-    }
+    try {
+        // Start a transaction
+        await pool.query('START TRANSACTION');
 
-    // Delete the game from the game table.
-    const deleteQuery = "DELETE FROM game WHERE id = ?";
-    const [deleteResult] = await pool.query(deleteQuery, [gameId]);
-    if ((deleteResult as any).affectedRows === 0) {
-        throw new Error("No game found");
+        // Check if the game has one or more reviews.
+        const reviewQuery = "SELECT COUNT(*) AS reviewCount FROM game_review WHERE game_id = ?";
+        const [reviewRows] = await pool.query(reviewQuery, [gameId]);
+        const reviewCount = (reviewRows as any[])[0].reviewCount;
+        if (reviewCount > 0) {
+            await pool.query('ROLLBACK');
+            throw new Error("Game has reviews");
+        }
+
+        // Check for and delete related records in wishlist
+        await pool.query("DELETE FROM wishlist WHERE game_id = ?", [gameId]);
+
+        // Check for and delete related records in owned
+        await pool.query("DELETE FROM owned WHERE game_id = ?", [gameId]);
+
+        // Check for and delete related records in game_platforms
+        await pool.query("DELETE FROM game_platforms WHERE game_id = ?", [gameId]);
+
+        // Delete the game from the game table.
+        const deleteQuery = "DELETE FROM game WHERE id = ?";
+        const [deleteResult] = await pool.query(deleteQuery, [gameId]);
+        if ((deleteResult as any).affectedRows === 0) {
+            await pool.query('ROLLBACK');
+            throw new Error("No game found");
+        }
+
+        // Commit the transaction
+        await pool.query('COMMIT');
+    } catch (error) {
+        // Rollback the transaction if any error occurs
+        await pool.query('ROLLBACK');
+        throw error;
     }
 }
 
