@@ -1,34 +1,24 @@
 import { Request, Response } from "express";
 import Logger from '../../config/logger';
 import * as User from "../models/user.model";
-import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import { hash, compare } from '../services/passwords';
+import { validate } from '../services/validator';
+import schemas from '../resources/schemas.json';
 
 /**
  * Registers a new user.
  */
 const register = async (req: Request, res: Response): Promise<void> => {
     try {
+        // Validate incoming data against the user_register schema.
+        const validationResult = await validate(schemas.user_register, req.body);
+        if (validationResult !== true) {
+            res.statusMessage = validationResult;
+            res.status(400).send();
+            return;
+        }
         const { firstName, lastName, email, password } = req.body;
-
-        if (!firstName || !lastName || !email || !password) {
-            res.statusMessage = "Missing required fields";
-            res.status(400).send();
-            return;
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            res.statusMessage = "Invalid email format";
-            res.status(400).send();
-            return;
-        }
-
-        if (password.length < 6) {
-            res.statusMessage = "Password must be at least 6 characters";
-            res.status(400).send();
-            return;
-        }
 
         const existingUser = await User.getUserByEmail(email);
         if (existingUser) {
@@ -37,7 +27,7 @@ const register = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await hash(password);
         const newUserId = await User.createUser({
             firstName,
             lastName,
@@ -58,13 +48,14 @@ const register = async (req: Request, res: Response): Promise<void> => {
  */
 const login = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            res.statusMessage = "Missing email or password";
+        // Validate incoming data against the user_login schema.
+        const validationResult = await validate(schemas.user_login, req.body);
+        if (validationResult !== true) {
+            res.statusMessage = validationResult;
             res.status(400).send();
             return;
         }
+        const { email, password } = req.body;
 
         const user = await User.getUserByEmail(email);
         if (!user) {
@@ -73,7 +64,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const passwordMatches = await bcrypt.compare(password, user.password);
+        const passwordMatches = await compare(password, user.password);
         if (!passwordMatches) {
             res.statusMessage = "Incorrect email/password";
             res.status(401).send();
@@ -92,12 +83,11 @@ const login = async (req: Request, res: Response): Promise<void> => {
 
 /**
  * Logs out a user.
- * With middleware, we assume that validateUserAuthToken has attached the user.
+ * Assumes that middleware has already validated the user token.
  */
 const logout = async (req: Request, res: Response): Promise<void> => {
     try {
-        const authToken = req.get("X-Authorization"); // Could also be read by middleware if needed.
-        // Since middleware guarantees a valid user, simply update the token.
+        const authToken = req.get("X-Authorization");
         const user = await User.getUserByToken(authToken!);
         if (!user) {
             res.statusMessage = "Unauthorized";
@@ -137,7 +127,7 @@ const view = async (req: Request, res: Response): Promise<void> => {
         } else {
             res.json({
                 firstName: user.firstName,
-                lastName: user.lastName
+                lastName: user.lastName,
             });
         }
     } catch (err) {
@@ -153,45 +143,19 @@ const view = async (req: Request, res: Response): Promise<void> => {
 const update = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = (req as any).userId as number;
+        // Validate incoming data against the user_edit schema if any fields are provided.
+        if (Object.keys(req.body).length > 0) {
+            const validationResult = await validate(schemas.user_edit, req.body);
+            if (validationResult !== true) {
+                res.statusMessage = validationResult;
+                res.status(400).send();
+                return;
+            }
+        }
         const { firstName, lastName, email, password, currentPassword } = req.body;
-        // Validate firstName.
-        if (firstName !== undefined) {
-            if (typeof firstName !== 'string' || firstName.trim().length === 0 || firstName.length > 64) {
-                res.statusMessage = "Invalid first name";
-                res.status(400).send();
-                return;
-            }
-        }
-        // Validate lastName.
-        if (lastName !== undefined) {
-            if (typeof lastName !== 'string' || lastName.trim().length === 0 || lastName.length > 64) {
-                res.statusMessage = "Invalid last name";
-                res.status(400).send();
-                return;
-            }
-        }
-        // Validate email.
-        if (email !== undefined) {
-            if (typeof email !== 'string' || email.trim().length === 0 || email.length > 256) {
-                res.statusMessage = "Invalid email";
-                res.status(400).send();
-                return;
-            }
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                res.statusMessage = "Invalid email format";
-                res.status(400).send();
-                return;
-            }
-            const existingUser = await User.getUserByEmail(email);
-            if (existingUser && existingUser.id !== userId) {
-                res.statusMessage = "Email already in use";
-                res.status(403).send();
-                return;
-            }
-        }
-        // Handle password update.
         let newPasswordHash: string | undefined;
+
+        // Handle password update if fields are provided.
         if (password !== undefined || currentPassword !== undefined) {
             if (!password || !currentPassword) {
                 res.statusMessage = "Both currentPassword and new password must be provided to change password";
@@ -201,12 +165,6 @@ const update = async (req: Request, res: Response): Promise<void> => {
             if (password === currentPassword) {
                 res.statusMessage = "New password must be different from current password";
                 res.status(403).send();
-                // TODO does this status code make sense?
-                return;
-            }
-            if (password.length < 6 || currentPassword.length < 6) {
-                res.statusMessage = "Passwords must be at least 6 characters";
-                res.status(400).send();
                 return;
             }
             const currentUser = await User.getUserByIdAuth(userId);
@@ -215,20 +173,21 @@ const update = async (req: Request, res: Response): Promise<void> => {
                 res.status(404).send();
                 return;
             }
-            const passwordMatches = await bcrypt.compare(currentPassword, currentUser.password);
+            const passwordMatches = await compare(currentPassword, currentUser.password);
             if (!passwordMatches) {
                 res.statusMessage = "Unauthorized: Current password is incorrect";
                 res.status(401).send();
                 return;
             }
-            newPasswordHash = await bcrypt.hash(password, 10);
+            newPasswordHash = await hash(password);
         }
 
-        const updateData: { firstName?: string, lastName?: string, email?: string, password?: string } = {};
+        const updateData: { firstName?: string; lastName?: string; email?: string; password?: string } = {};
         if (firstName !== undefined) updateData.firstName = firstName;
         if (lastName !== undefined) updateData.lastName = lastName;
         if (email !== undefined) updateData.email = email;
         if (newPasswordHash !== undefined) updateData.password = newPasswordHash;
+
         if (Object.keys(updateData).length === 0) {
             res.status(200).send();
             return;
@@ -237,6 +196,10 @@ const update = async (req: Request, res: Response): Promise<void> => {
         res.status(200).send();
     } catch (err) {
         Logger.error(err);
+        if (err.message.includes("Duplicate entry")) {
+            res.statusMessage = "Duplicate entry (duplicate email)";
+            res.status(403).send();
+        }
         res.statusMessage = "Internal Server Error";
         res.status(500).send();
     }
