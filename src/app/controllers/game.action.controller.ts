@@ -1,11 +1,10 @@
-import {Request, Response} from "express";
+import { Request, Response } from "express";
 import Logger from "../../config/logger";
-import * as User from "../models/user.model";
-import * as ActionModel from "../models/game.action.model"
-import {GameRequest} from "../middleware/game.middleware";
+import * as ActionModel from "../models/game.action.model";
+import { GameRequest } from "../middleware/game.middleware";
 
 /**
- * adds a game to wishlist
+ * Adds a game to the wishlist.
  */
 const addGameToWishlist = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -28,7 +27,7 @@ const addGameToWishlist = async (req: Request, res: Response): Promise<void> => 
 };
 
 /**
- * removes a game from wishlist
+ * Removes a game from the wishlist.
  */
 const removeGameFromWishlist = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -48,7 +47,7 @@ const removeGameFromWishlist = async (req: Request, res: Response): Promise<void
 };
 
 /**
- * adds a game to owned
+ * Adds a game to owned.
  */
 const addGameToOwned = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -68,7 +67,7 @@ const addGameToOwned = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * removes a game from owned
+ * Removes a game from owned.
  */
 const removeGameFromOwned = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -87,4 +86,4 @@ const removeGameFromOwned = async (req: Request, res: Response): Promise<void> =
     }
 };
 
-export {addGameToWishlist, removeGameFromWishlist, addGameToOwned, removeGameFromOwned};
+export { addGameToWishlist, removeGameFromWishlist, addGameToOwned, removeGameFromOwned };

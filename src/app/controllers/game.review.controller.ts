@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import Logger from "../../config/logger";
 import * as ReviewModel from "../models/game.review.model";
-import * as User from "../models/user.model";
 import { GameRequest } from "../middleware/game.middleware";
+import { validate } from "../services/validator";
+import schemas from "../resources/schemas.json";
 
 /**
- * gets a game review
+ * Gets all reviews for the specified game.
  */
 const getGameReviews = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -25,17 +26,19 @@ const getGameReviews = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * adds a game review
+ * Adds a review for the specified game.
  */
 const addGameReview = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { gameId, user } = req as GameRequest;
-        const { rating, review } = req.body;
-        if (rating === undefined) {
-            res.statusMessage = "Invalid rating";
+        // Validate request body using the game_review_post schema.
+        const validationResult = await validate(schemas.game_review_post, req.body);
+        if (validationResult !== true) {
+            res.statusMessage = validationResult;
             res.status(400).send();
             return;
         }
+        const { gameId, user } = req as GameRequest;
+        const { rating, review } = req.body;
         await ReviewModel.addReview(user.id, gameId, rating, review);
         res.status(201).send();
     } catch (err: any) {

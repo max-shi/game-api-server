@@ -2,9 +2,23 @@ import { Request, Response } from "express";
 import Logger from "../../config/logger";
 import * as GameImage from "../models/game.image.model";
 import { GameRequest } from "../middleware/game.middleware";
+import { validate } from "../services/validator";
+
+// Inline schema for validating allowed image content types.
+const imageHeaderSchema = {
+    type: "object",
+    properties: {
+        contentType: {
+            type: "string",
+            enum: ["image/png", "image/jpeg", "image/gif"]
+        }
+    },
+    required: ["contentType"],
+    additionalProperties: false
+};
 
 /**
- * gets the image for the specified game.
+ * Gets the image for the specified game.
  */
 const getImage = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -32,33 +46,28 @@ const getImage = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * sets (or replaces) the image for the specified game.
+ * Sets (or replaces) the image for the specified game.
  */
 const setImage = async (req: Request, res: Response): Promise<void> => {
     try {
         const { gameId, user } = req as GameRequest;
         const contentType = req.header("Content-Type");
-        if (!contentType) {
-            res.statusMessage = "Content-Type header missing";
+
+        // Validate the Content-Type header using the inline schema.
+        const headerValidation = await validate(imageHeaderSchema, { contentType });
+        if (headerValidation !== true) {
+            res.statusMessage = headerValidation;
             res.status(400).send();
             return;
         }
-        if (
-            contentType !== "image/png" &&
-            contentType !== "image/jpeg" &&
-            contentType !== "image/gif"
-        ) {
-            res.statusMessage = "Unsupported image type";
-            res.status(400).send();
-            return;
-        }
+
         const imageBuffer = req.body;
         if (!Buffer.isBuffer(imageBuffer)) {
             res.statusMessage = "Invalid image data";
             res.status(400).send();
             return;
         }
-        const isNew = await GameImage.setGameImage(user.id, gameId, imageBuffer, contentType);
+        const isNew = await GameImage.setGameImage(user.id, gameId, imageBuffer, contentType!);
         if (isNew) {
             res.status(201).send();
         } else {
