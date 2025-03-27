@@ -2,6 +2,20 @@ import { Request, Response } from "express";
 import Logger from "../../config/logger";
 import * as userImage from "../models/user.image.model";
 import { UserRequest, AuthenticatedUserRequest } from "../middleware/user.middleware";
+import { validate } from '../services/validator';
+
+// Inline schema to validate the content type header for image uploads.
+const imageContentTypeSchema = {
+    type: "object",
+    properties: {
+        contentType: {
+            type: "string",
+            enum: ["image/png", "image/jpeg", "image/gif"]
+        }
+    },
+    required: ["contentType"],
+    additionalProperties: false
+};
 
 /**
  * Retrieves a user's profile image.
@@ -17,7 +31,7 @@ const getImage = async (req: Request, res: Response): Promise<void> => {
         }
         res.set("Content-Type", imageResult.contentType);
         res.status(200).send(imageResult.data);
-    } catch (err) {
+    } catch (err: any) {
         Logger.error(err);
         if (err.message.includes("User not found")) {
             res.statusMessage = "User not found";
@@ -36,18 +50,17 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = (req as UserRequest).userId;
         const authUser = (req as AuthenticatedUserRequest).user;
-        // Since authorization middleware ensures authUser.id === userId, we can pass authUser.id.
-        const contentType = req.header("Content-Type");
-        if (!contentType) {
-            res.statusMessage = "Content-Type header missing";
+        // Validate the header using the validator module.
+        const headerValidationResult = await validate(imageContentTypeSchema, {
+            contentType: req.header("Content-Type")
+        });
+        if (headerValidationResult !== true) {
+            res.statusMessage = headerValidationResult;
             res.status(400).send();
             return;
         }
-        if (contentType !== "image/png" && contentType !== "image/jpeg" && contentType !== "image/gif") {
-            res.statusMessage = "Unsupported image type";
-            res.status(400).send();
-            return;
-        }
+        const contentType = req.header("Content-Type")!;
+        // Validate that the body contains a Buffer.
         const imageBuffer = req.body;
         if (!Buffer.isBuffer(imageBuffer)) {
             res.statusMessage = "Invalid image data";
@@ -91,7 +104,7 @@ const deleteImage = async (req: Request, res: Response): Promise<void> => {
             res.statusMessage = "Image not found";
             res.status(404).send();
         }
-    } catch (err) {
+    } catch (err: any) {
         Logger.error(err);
         if (err.message.includes("User not found")) {
             res.statusMessage = "User not found";
