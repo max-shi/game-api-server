@@ -85,7 +85,7 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
             res.statusMessage = "Unauthorized";
             res.status(403).send();
         } else if (err.message.includes("Forbidden")) {
-            res.statusMessage = err.message;
+            res.statusMessage = "Forbidden";
             res.status(403).send();
         } else {
             res.statusMessage = "Internal Server Error";
