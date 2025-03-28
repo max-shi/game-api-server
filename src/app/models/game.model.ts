@@ -256,16 +256,22 @@ const editGame = async (
             throw new Error("Invalid genreId: genre does not exist");
         }
     }
-    if (updatedData.platforms !== undefined) {
-        if (!Array.isArray(updatedData.platforms) || updatedData.platforms.length === 0) {
-            throw new Error("platforms must be a non-empty array");
-        }
-        const placeholders = updatedData.platforms.map(() => "?").join(",");
-        const [platformRows] = await pool.query(`SELECT id FROM platform WHERE id IN (${placeholders})`, updatedData.platforms);
-        if ((platformRows as any[]).length !== updatedData.platforms.length) {
-            throw new Error("One or more platformIds are invalid");
-        }
+    if (
+        !updatedData.platforms ||
+        !Array.isArray(updatedData.platforms) ||
+        updatedData.platforms.length === 0
+    ) {
+        throw new Error("platformIds must be a non-empty array");
     }
+    const placeholders = updatedData.platforms.map(() => "?").join(",");
+    const [platformRows] = await pool.query(
+        `SELECT id FROM platform WHERE id IN (${placeholders})`,
+        updatedData.platforms
+    );
+    if ((platformRows as any[]).length !== updatedData.platforms.length) {
+        throw new Error("One or more platformIds are invalid");
+    }
+
     const updateFields: string[] = [];
     const updateValues: any[] = [];
 
@@ -276,6 +282,10 @@ const editGame = async (
     if (updatedData.description !== undefined) {
         updateFields.push("description = ?");
         updateValues.push(updatedData.description);
+    }
+    if (updatedData.genreId !== undefined) {
+        updateFields.push("genre_id = ?");
+        updateValues.push(updatedData.genreId);
     }
     if (updatedData.price !== undefined) {
         updateFields.push("price = ?");
@@ -294,6 +304,7 @@ const editGame = async (
         await pool.query(insertPlatformQuery, [platformValues]);
     }
 };
+
 
 const getGameById = async (gameId: number): Promise<DetailedGame | null> => {
     const pool = getPool();
@@ -361,7 +372,6 @@ const createGame = async (
     if (!gameData.platformIds || gameData.platformIds.length === 0) {
         throw new Error("At least one platform is required");
     }
-
     // Validate that each provided platform exists.
     const placeholders = gameData.platformIds.map(() => "?").join(",");
     const [platformRows] = await pool.query(

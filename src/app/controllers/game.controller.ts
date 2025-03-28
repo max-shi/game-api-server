@@ -209,6 +209,7 @@ const editGame = async (req: Request, res: Response): Promise<void> => {
         } else if (
             err.message.includes("Invalid genreId") ||
             err.message.includes("platforms") ||
+            err.message.includes("platformIds must be a non-empty array") ||
             err.message.includes("One or more platformIds are invalid") ||
             err.message.includes("Type Error")
         ) {
