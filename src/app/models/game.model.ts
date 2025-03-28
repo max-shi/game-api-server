@@ -433,14 +433,12 @@ const deleteGameById = async (gameId: number): Promise<void> => {
     const pool = getPool();
 
     try {
-        // await pool.query('START TRANSACTION');
-        await pool.beginTransaction();
+        await pool.query('START TRANSACTION');
         const reviewQuery = "SELECT COUNT(*) AS reviewCount FROM game_review WHERE game_id = ?";
         const [reviewRows] = await pool.query(reviewQuery, [gameId]);
         const reviewCount = (reviewRows as any[])[0].reviewCount;
         if (reviewCount > 0) {
-            await pool.rollbackTransaction();
-            // await pool.query('ROLLBACK');
+            await pool.query('ROLLBACK');
             throw new Error("Game has reviews");
         }
         await pool.query("DELETE FROM wishlist WHERE game_id = ?", [gameId]);
@@ -449,15 +447,12 @@ const deleteGameById = async (gameId: number): Promise<void> => {
         const deleteQuery = "DELETE FROM game WHERE id = ?";
         const [deleteResult] = await pool.query(deleteQuery, [gameId]);
         if ((deleteResult as any).affectedRows === 0) {
-            await pool.rollbackTransaction();
-            // await pool.query('ROLLBACK');
+            await pool.query('ROLLBACK');
             throw new Error("No game found");
         }
-        await pool.commitTransaction();
-        // await pool.query('COMMIT');
+        await pool.query('COMMIT');
     } catch (error) {
-        await pool.rollbackTransaction();
-        // await pool.query('ROLLBACK');
+        await pool.query('ROLLBACK');
         throw error;
     }
 }
