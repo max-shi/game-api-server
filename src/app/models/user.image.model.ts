@@ -38,10 +38,6 @@ async function getUserImage(id: number): Promise<{ data: Buffer; contentType: st
     }
 }
 
-/**
- * Sets or replaces a user's profile image.
- *
- */
 async function setUserImage(
     userId: number,
     id: number,

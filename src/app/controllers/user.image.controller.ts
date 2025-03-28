@@ -4,7 +4,7 @@ import * as userImage from "../models/user.image.model";
 import { UserRequest, AuthenticatedUserRequest } from "../middleware/user.middleware";
 import { validate } from '../services/validator';
 
-// Inline schema to validate the content type header for image uploads.
+// TODO : can we put this schema in the .json (resources/schemas.json)
 const imageContentTypeSchema = {
     type: "object",
     properties: {
@@ -17,9 +17,6 @@ const imageContentTypeSchema = {
     additionalProperties: false
 };
 
-/**
- * Retrieves a user's profile image.
- */
 const getImage = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = (req as UserRequest).userId;
@@ -43,14 +40,10 @@ const getImage = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-/**
- * Sets (or replaces) a user's profile image.
- */
 const setImage = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = (req as UserRequest).userId;
         const authUser = (req as AuthenticatedUserRequest).user;
-        // Validate the header using the validator module.
         const headerValidationResult = await validate(imageContentTypeSchema, {
             contentType: req.header("Content-Type")
         });
@@ -91,9 +84,6 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-/**
- * Deletes a user's profile image.
- */
 const deleteImage = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = (req as UserRequest).userId;

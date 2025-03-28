@@ -125,7 +125,7 @@ const getGames = async (
 
     const whereClause = conditions.length > 0 ? "WHERE " + conditions.join(" AND ") : "";
     Logger.info("whereClause = " + whereClause);
-
+    // TODO this is horrible
     const allowedSortBys = new Set([
         "ALPHABETICAL_ASC",
         "ALPHABETICAL_DESC",
@@ -239,35 +239,25 @@ const editGame = async (
     userId: number
 ): Promise<void> => {
     const pool = getPool();
-
-    // Retrieve the game first (using your existing getGameById to get detailed info).
     const game = await getGameById(gameId);
     if (!game) {
         throw new Error("No game found");
     }
-
-    // Only the creator of the game may make changes.
     if (game.creatorId !== userId) {
         throw new Error("Only the creator of a game may change it");
     }
-
-    // If title is provided and it is different from the current one, ensure it is unique.
     if (updatedData.title && updatedData.title !== game.title) {
         const [rows] = await pool.query("SELECT id FROM game WHERE title = ? AND id != ?", [updatedData.title, gameId]);
         if ((rows as any[]).length > 0) {
             throw new Error("Game title already exists");
         }
     }
-
-    // If genreId is provided, check that the genre exists.
     if (updatedData.genreId !== undefined) {
         const [genreRows] = await pool.query("SELECT id FROM genre WHERE id = ?", [updatedData.genreId]);
         if ((genreRows as any[]).length === 0) {
             throw new Error("Invalid genreId: genre does not exist");
         }
     }
-
-    // If platforms are provided, ensure it's a non-empty array and validate that each platform exists.
     if (updatedData.platforms !== undefined) {
         if (!Array.isArray(updatedData.platforms) || updatedData.platforms.length === 0) {
             throw new Error("platforms must be a non-empty array");
@@ -278,8 +268,6 @@ const editGame = async (
             throw new Error("One or more platformIds are invalid");
         }
     }
-
-    // Build dynamic update for the game table.
     const updateFields: string[] = [];
     const updateValues: any[] = [];
 
@@ -301,13 +289,8 @@ const editGame = async (
         updateValues.push(gameId);
         await pool.query(updateQuery, updateValues);
     }
-
-    // If platforms are provided, update the game_platforms table.
     if (updatedData.platforms !== undefined) {
-        // Delete existing platform associations.
         await pool.query("DELETE FROM game_platforms WHERE game_id = ?", [gameId]);
-
-        // Insert new platform associations.
         const insertPlatformQuery = "INSERT INTO game_platforms (game_id, platform_id) VALUES ?";
         const platformValues = updatedData.platforms.map((platformId) => [gameId, platformId]);
         await pool.query(insertPlatformQuery, [platformValues]);
@@ -450,40 +433,31 @@ const deleteGameById = async (gameId: number): Promise<void> => {
     const pool = getPool();
 
     try {
-        // Start a transaction
-        await pool.query('START TRANSACTION');
-
-        // Check if the game has one or more reviews.
+        // await pool.query('START TRANSACTION');
+        await pool.beginTransaction();
         const reviewQuery = "SELECT COUNT(*) AS reviewCount FROM game_review WHERE game_id = ?";
         const [reviewRows] = await pool.query(reviewQuery, [gameId]);
         const reviewCount = (reviewRows as any[])[0].reviewCount;
         if (reviewCount > 0) {
-            await pool.query('ROLLBACK');
+            await pool.rollbackTransaction();
+            // await pool.query('ROLLBACK');
             throw new Error("Game has reviews");
         }
-
-        // Check for and delete related records in wishlist
         await pool.query("DELETE FROM wishlist WHERE game_id = ?", [gameId]);
-
-        // Check for and delete related records in owned
         await pool.query("DELETE FROM owned WHERE game_id = ?", [gameId]);
-
-        // Check for and delete related records in game_platforms
         await pool.query("DELETE FROM game_platforms WHERE game_id = ?", [gameId]);
-
-        // Delete the game from the game table.
         const deleteQuery = "DELETE FROM game WHERE id = ?";
         const [deleteResult] = await pool.query(deleteQuery, [gameId]);
         if ((deleteResult as any).affectedRows === 0) {
-            await pool.query('ROLLBACK');
+            await pool.rollbackTransaction();
+            // await pool.query('ROLLBACK');
             throw new Error("No game found");
         }
-
-        // Commit the transaction
-        await pool.query('COMMIT');
+        await pool.commitTransaction();
+        // await pool.query('COMMIT');
     } catch (error) {
-        // Rollback the transaction if any error occurs
-        await pool.query('ROLLBACK');
+        await pool.rollbackTransaction();
+        // await pool.query('ROLLBACK');
         throw error;
     }
 }

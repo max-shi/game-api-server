@@ -9,9 +9,6 @@ interface GameRequest extends AuthenticatedRequest {
     gameId: number;
 }
 
-/**
- * Middleware to validate game id parameter only.
- */
 const validateGameId = (req: Request, res: Response, next: NextFunction): void => {
     const gameId = parseInt(req.params.id, 10);
     if (isNaN(gameId) || gameId < 0) {
@@ -23,9 +20,6 @@ const validateGameId = (req: Request, res: Response, next: NextFunction): void =
     next();
 };
 
-/**
- * Middleware to validate authentication token only.
- */
 const validateAuthToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const token = req.get("X-Authorization");
     if (!token) {
@@ -44,7 +38,6 @@ const validateAuthToken = async (req: Request, res: Response, next: NextFunction
 };
 
 // TODO, can we make it such that we can simply do validateAuthToken then validateGameId, instead of making a whole new middleware
-// Middleware to validate both game id and authentication token.
 const validateGameRequest = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const gameId = parseInt(req.params.id, 10);
     if (isNaN(gameId) || gameId < 0) {

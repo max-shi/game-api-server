@@ -9,10 +9,6 @@ interface AuthenticatedUserRequest extends Request {
     user: any;
 }
 
-/**
- * Middleware to validate the user id parameter.
- * If valid, attaches it as req.userId.
- */
 const validateUserId = (req: Request, res: Response, next: NextFunction): void => {
     const userId = parseInt(req.params.id, 10);
     if (isNaN(userId) || userId < 0) {
@@ -24,11 +20,6 @@ const validateUserId = (req: Request, res: Response, next: NextFunction): void =
     next();
 };
 
-/**
- * Middleware to validate the authentication token.
- * Expects the token to be in the "X-Authorization" header.
- * If valid, attaches the user to req.user.
- */
 const validateUserAuthToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const token = req.get("X-Authorization");
     if (!token) {
@@ -46,10 +37,6 @@ const validateUserAuthToken = async (req: Request, res: Response, next: NextFunc
     next();
 };
 
-/**
- * Middleware to authorize that the authenticated user (req.user)
- * is the same as the user whose id is in the URL (req.userId).
- */
 const authorizeUser = (req: Request, res: Response, next: NextFunction): void => {
     const authReq = req as AuthenticatedUserRequest & UserRequest;
     if (!authReq.user || authReq.user.id !== authReq.userId) {

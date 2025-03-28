@@ -3,15 +3,11 @@ import Logger from "../../config/logger";
 
 const getReviewsByGameId = async (gameId: number): Promise<any[]> => {
     const pool = getPool();
-
-    // Check if the game exists.
     const gameQuery = "SELECT id FROM game WHERE id = ?";
     const [gameRows] = await pool.query(gameQuery, [gameId]);
     if (!gameRows || (gameRows as any[]).length === 0) {
         throw new Error("No game found with id");
     }
-
-    // Retrieve reviews with reviewer details.
     const reviewQuery = `
         SELECT
             gr.user_id AS reviewerId,
@@ -36,8 +32,6 @@ const addReview = async (
     review?: string
 ): Promise<void> => {
     const pool = getPool();
-
-    // Check if the game exists and get its creator.
     const gameQuery = "SELECT creator_id FROM game WHERE id = ?";
     const [gameRows] = await pool.query(gameQuery, [gameId]);
     if (!gameRows || (gameRows as any[]).length === 0) {
@@ -47,20 +41,14 @@ const addReview = async (
     if (creatorId === userId) {
         throw new Error("Cannot review your own game");
     }
-
-    // Check if the user has already reviewed the game.
     const reviewCheckQuery = "SELECT id FROM game_review WHERE game_id = ? AND user_id = ?";
     const [existingRows] = await pool.query(reviewCheckQuery, [gameId, userId]);
     if (existingRows && (existingRows as any[]).length > 0) {
         throw new Error("Can only review a game once");
     }
-
-    // Validate that the rating is between 1 and 10.
     if (rating < 1 || rating > 10) {
         throw new Error("Rating must be between 1 and 10");
     }
-
-    // Insert the review.
     const insertQuery = "INSERT INTO game_review (game_id, user_id, rating, review) VALUES (?, ?, ?, ?)";
     await pool.query(insertQuery, [gameId, userId, rating, review || null]);
 };
