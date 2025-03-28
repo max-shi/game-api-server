@@ -51,7 +51,6 @@ const getGames = async (
     // Build dynamic WHERE clause and parameters for filters.
     const conditions: string[] = [];
     const queryParams: any[] = [];
-
     if (params.q) {
         conditions.push("(game.title LIKE ? OR game.description LIKE ?)");
         queryParams.push(`%${params.q}%`, `%${params.q}%`);
@@ -65,7 +64,7 @@ const getGames = async (
         Logger.info("parameter genreIds", params.genreIds);
     }
 
-    if (params.price !== undefined) {
+    if (params.price !== null) {
         if (params.price === 0) {
             conditions.push("game.price = 0");
             Logger.info("filtering for free games (price = 0)");
@@ -181,7 +180,6 @@ const getGames = async (
     const countQuery = `SELECT COUNT(*) as total FROM game ${whereClause}`;
     const [countResult] = await pool.query(countQuery, queryParams);
     const totalCount = countResult[0].total;
-
     // Build the SELECT for average rating for each game.
     const ratingSelect = "(SELECT IFNULL(AVG(r.rating), 0) FROM game_review r WHERE r.game_id = game.id) AS rating";
     // https://www.w3schools.com/sql/func_mysql_ifnull.asp

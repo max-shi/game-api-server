@@ -20,8 +20,8 @@ const getAllGames = async (req: Request, res: Response): Promise<void> => {
         }
         // Convert validated query params from strings to numbers where applicable.
         const startIndex = req.query.startIndex ? parseInt(req.query.startIndex as string, 10) : 0;
-        const count = req.query.count ? parseInt(req.query.count as string, 10) : 100;
-        const price = req.query.price ? parseInt(req.query.price as string, 10) : 10000;
+        const count = req.query.count ? parseInt(req.query.count as string, 10) : 2000000000000000;
+        const price = req.query.price ? parseInt(req.query.price as string, 10) : null;
         const creatorId = req.query.creatorId ? parseInt(req.query.creatorId as string, 10) : null;
         const reviewerId = req.query.reviewerId ? parseInt(req.query.reviewerId as string, 10) : null;
         const q = req.query.q ? req.query.q.toString() : undefined;
