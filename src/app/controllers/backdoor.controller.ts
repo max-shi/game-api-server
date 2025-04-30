@@ -1,7 +1,7 @@
 import {Request, Response} from "express";
 import Logger from '../../config/logger';
 import * as Backdoor from '../models/backdoor.model';
-
+// test
 const resetDb = async (req: Request, res: Response):Promise<void> => {
     try {
         await Backdoor.resetDb();
