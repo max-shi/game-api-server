@@ -3,6 +3,7 @@ storage/images/*
 !storage/images/.gitkeep
 dist
 
+.db
 # Created by .ignore support plugin (hsz.mobi)
 logs
 *.log
