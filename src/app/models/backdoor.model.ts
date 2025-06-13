@@ -44,8 +44,6 @@ const loadData = async (): Promise<any> => {
  * @returns {Promise<void>}
  */
 const populateDefaultUsers = async (): Promise<void> => {
-    const createSQL = 'INSERT INTO `user` (`email`, `first_name`, `last_name`, `image_filename`, `password`) VALUES ?';
-
     const properties = defaultUsers.properties;
     let usersData = defaultUsers.usersData;
 
@@ -57,9 +55,20 @@ const populateDefaultUsers = async (): Promise<void> => {
     await Promise.all(usersData.map((user: any) => changePasswordToHash(user, passwordIndex)));
 
     try {
-        await getPool().query(createSQL, [usersData]);
+        // For SQLite, we need to insert one row at a time instead of using batch insert
+        if (getPool().dbType === 'sqlite') {
+            // Insert each user individually for SQLite compatibility
+            for (const user of usersData) {
+                const createSQL = 'INSERT INTO `user` (`email`, `first_name`, `last_name`, `image_filename`, `password`) VALUES (?, ?, ?, ?, ?)';
+                await getPool().query(createSQL, user);
+            }
+        } else {
+            // MySQL batch insert
+            const createSQL = 'INSERT INTO `user` (`email`, `first_name`, `last_name`, `image_filename`, `password`) VALUES ?';
+            await getPool().query(createSQL, [usersData]);
+        }
     } catch (err) {
-        Logger.error(err.sql);
+        Logger.error(err);
         throw err;
     }
 }

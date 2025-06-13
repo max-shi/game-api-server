@@ -1,33 +1,48 @@
-# SENG365 Assignment 1 API Server (Game Review Site)
+# Game API Server
 
 ## Running locally
 
 1. Use `npm install` to populate the `node_modules/` directory with up-to-date packages
-2. Create a file called `.env`, following the instructions in the section below
-3. Go to https://dbadmin.csse.canterbury.ac.nz and create a database with the name that you set in the `.env` file
-2. Run `npm run start` or `npm run debug` to start the server
-3. The server will be accessible on `http://localhost:4941`
+2. Create a file called `.env` (or use the default one provided)
+3. Run `npm run start` or `npm run debug` to start the server
+4. The server will be accessible on `http://localhost:4941`
+
+### Database Setup
+
+The application uses SQLite by default, which is automatically set up when you start the server. The database file will be created at `./storage/game_api.db` and populated with sample data on first run.
 
 ### `.env` file
 
-Create a `.env` file in the root directory of this project including the following information (note that you will need
-to create the database first in phpMyAdmin):
+Create a `.env` file in the root directory of this project with the following information:
 
 ```
-SENG365_MYSQL_HOST=db2.csse.canterbury.ac.nz
-SENG365_MYSQL_USER={your usercode}
-SENG365_MYSQL_PASSWORD={your password}
-SENG365_MYSQL_DATABASE={a database starting with your usercode then an underscore}
+# Database Configuration
+
+# Database type (sqlite or mysql)
+DB_TYPE=sqlite
+
+# SQLite Configuration
+SQLITE_DB_PATH=./storage/game_api.db
+
+# MySQL Configuration (only used if DB_TYPE=mysql)
+SENG365_MYSQL_HOST=localhost
+SENG365_MYSQL_USER=root
+SENG365_MYSQL_PASSWORD=your_password_here
+SENG365_MYSQL_DATABASE=game_api
+SENG365_MYSQL_PORT=3306
+
+# Server Configuration
+PORT=4941
 ```
 
-For example:
+### Switching to MySQL (Optional)
 
-```
-SENG365_MYSQL_HOST=db2.csse.canterbury.ac.nz
-SENG365_MYSQL_USER=abc123
-SENG365_MYSQL_PASSWORD=password
-SENG365_MYSQL_DATABASE=abc123_s365
-```
+If you prefer to use MySQL instead of SQLite:
+
+1. Install MySQL server locally
+2. Create a database named `game_api` in your MySQL server
+3. Update the `.env` file to set `DB_TYPE=mysql` and configure your MySQL credentials
+4. Start the server as normal - it will initialize the MySQL database on first run
 
 ## Some notes about endpoint status codes
 

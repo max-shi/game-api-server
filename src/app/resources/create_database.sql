@@ -1,7 +1,7 @@
-# MySQL scripts for dropping existing tables and recreating the database table structure
+-- SQLite scripts for dropping existing tables and recreating the database table structure
 
-### DROP EVERYTHING ###
-# Tables/views must be dropped in reverse order due to referential constraints (foreign keys).
+-- DROP EVERYTHING --
+-- Tables/views must be dropped in reverse order due to referential constraints (foreign keys).
 DROP TABLE IF EXISTS `game_review`;
 DROP TABLE IF EXISTS `wishlist`;
 DROP TABLE IF EXISTS `owned`;
@@ -11,90 +11,82 @@ DROP TABLE IF EXISTS `game`;
 DROP TABLE IF EXISTS `genre`;
 DROP TABLE IF EXISTS `user`;
 
-### TABLES ###
-# Tables must be created in a particular order due to referential constraints i.e. foreign keys.
+-- TABLES --
+-- Tables must be created in a particular order due to referential constraints i.e. foreign keys.
 
 CREATE TABLE `user` (
-  `id`          int(11)       NOT NULL AUTO_INCREMENT,
-  `email`       varchar(256)  NOT NULL,
-  `first_name`  varchar(64)   NOT NULL,
-  `last_name`   varchar(64)   NOT NULL,
-  `image_filename`  varchar(64)   DEFAULT NULL,
-  `password`    varchar(256)  NOT NULL COMMENT 'Only store the hash here, not the actual password!',
-  `auth_token`  varchar(256)  DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_key` (`email`)
+  `id`          INTEGER       PRIMARY KEY AUTOINCREMENT,
+  `email`       TEXT          NOT NULL,
+  `first_name`  TEXT          NOT NULL,
+  `last_name`   TEXT          NOT NULL,
+  `image_filename`  TEXT      DEFAULT NULL,
+  `password`    TEXT          NOT NULL, -- Only store the hash here, not the actual password!
+  `auth_token`  TEXT          DEFAULT NULL,
+  UNIQUE (`email`)
 );
 
 CREATE TABLE `genre` (
-  `id`         int(11)     NOT NULL   AUTO_INCREMENT,
-  `name`       varchar(64) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
+  `id`         INTEGER     PRIMARY KEY AUTOINCREMENT,
+  `name`       TEXT        NOT NULL,
+  UNIQUE (`name`)
 );
 
 CREATE TABLE `platform` (
-  `id`          int(11)     NOT NULL    AUTO_INCREMENT,
-  `name`        varchar(64) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
+  `id`          INTEGER     PRIMARY KEY AUTOINCREMENT,
+  `name`        TEXT        NOT NULL,
+  UNIQUE (`name`)
 );
 
 CREATE TABLE `game` (
-  `id`                          int(11)         NOT NULL AUTO_INCREMENT,
-  `title`                       VARCHAR(128)    NOT NULL,
-  `description`                 VARCHAR(1024)   NOT NULL,
+  `id`                          INTEGER         PRIMARY KEY AUTOINCREMENT,
+  `title`                       TEXT            NOT NULL,
+  `description`                 TEXT            NOT NULL,
   `creation_date`               DATETIME        NOT NULL,
-  `image_filename`              VARCHAR(64)     NULL,
-  `creator_id`                    int(11)         NOT NULL,
-  `genre_id`                    int(11)         NOT NULL,
-  `price`                       int(11)         NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY (`title`),
+  `image_filename`              TEXT            NULL,
+  `creator_id`                  INTEGER         NOT NULL,
+  `genre_id`                    INTEGER         NOT NULL,
+  `price`                       INTEGER         NOT NULL,
+  UNIQUE (`title`),
   FOREIGN KEY (`creator_id`) REFERENCES `user` (`id`),
   FOREIGN KEY (`genre_id`) REFERENCES `genre` (`id`)
 );
 
 CREATE TABLE `game_platforms` (
-    `id`            int(11)     NOT NULL    AUTO_INCREMENT,
-    `game_id`       int(11)     NOT NULL,
-    `platform_id`   int(11)     NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY (`game_id`, `platform_id`),
+    `id`            INTEGER     PRIMARY KEY AUTOINCREMENT,
+    `game_id`       INTEGER     NOT NULL,
+    `platform_id`   INTEGER     NOT NULL,
+    UNIQUE (`game_id`, `platform_id`),
     FOREIGN KEY (`game_id`) REFERENCES `game` (`id`),
     FOREIGN KEY (`platform_id`) REFERENCES `platform` (`id`)
 );
 
 CREATE TABLE `wishlist` (
-  `id`                          int(11)         NOT NULL AUTO_INCREMENT,
-  `game_id`                     int(11)         NOT NULL,
-  `user_id`                     int(11)         NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY (`game_id`, `user_id`),
+  `id`                          INTEGER         PRIMARY KEY AUTOINCREMENT,
+  `game_id`                     INTEGER         NOT NULL,
+  `user_id`                     INTEGER         NOT NULL,
+  UNIQUE (`game_id`, `user_id`),
   FOREIGN KEY (`game_id`) REFERENCES `game` (`id`),
   FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 );
 
 CREATE TABLE `owned` (
-  `id`                          int(11)         NOT NULL AUTO_INCREMENT,
-  `game_id`                     int(11)         NOT NULL,
-  `user_id`                     int(11)         NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY (`game_id`, `user_id`),
+  `id`                          INTEGER         PRIMARY KEY AUTOINCREMENT,
+  `game_id`                     INTEGER         NOT NULL,
+  `user_id`                     INTEGER         NOT NULL,
+  UNIQUE (`game_id`, `user_id`),
   FOREIGN KEY (`game_id`) REFERENCES `game` (`id`),
   FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 );
 
 
 CREATE TABLE `game_review` (
-  `id`                          int(11)         NOT NULL AUTO_INCREMENT,
-  `game_id`                     int(11)         NOT NULL,
-  `user_id`                     int(11)         NOT NULL,
-  `rating`                      int(11)         NOT NULL,
-  `review`                      VARCHAR(512)    NULL,
+  `id`                          INTEGER         PRIMARY KEY AUTOINCREMENT,
+  `game_id`                     INTEGER         NOT NULL,
+  `user_id`                     INTEGER         NOT NULL,
+  `rating`                      INTEGER         NOT NULL,
+  `review`                      TEXT            NULL,
   `timestamp`                   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY (`game_id`, `user_id`),
+  UNIQUE (`game_id`, `user_id`),
   FOREIGN KEY (`game_id`) REFERENCES `game` (`id`),
   FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 );
