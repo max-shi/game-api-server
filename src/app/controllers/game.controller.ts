@@ -12,13 +12,15 @@ import schemas from "../resources/schemas.json";
 const getAllGames = async (req: Request, res: Response): Promise<void> => {
     try {
         // Validate query parameters against the game_search schema.
-        const validationResult = await validate(schemas.game_search, req.query);
-        if (validationResult !== true) {
+        try {
+            const validationResult = await validate(schemas.game_search, req.query);
+            if (validationResult !== true) {
             res.statusMessage = validationResult;
             res.status(400).send();
             return;
         }
         // Convert validated query params from strings to numbers where applicable.
+        // Provide default values for all numeric parameters
         const startIndex = req.query.startIndex ? parseInt(req.query.startIndex as string, 10) : 0;
         const count = req.query.count ? parseInt(req.query.count as string, 10) : 2000000000000000;
         const price = req.query.price ? parseInt(req.query.price as string, 10) : null;
@@ -55,7 +57,7 @@ const getAllGames = async (req: Request, res: Response): Promise<void> => {
         // If filtering by ownedByMe or wishlistedByMe, require a valid token.
         let user = null;
         if (ownedByMe || wishlistedByMe) {
-            const token = req.get("X-Authorization");
+        const token = req.get("X-Authorization");
             if (!token) {
                 res.statusMessage = "Unauthorized: No token provided";
                 res.status(401).send();
@@ -64,8 +66,8 @@ const getAllGames = async (req: Request, res: Response): Promise<void> => {
             user = await User.getUserByToken(token);
             if (!user) {
                 res.statusMessage = "Unauthorized";
-                res.status(401).send();
-                return;
+            res.status(401).send();
+            return;
             }
         } else {
             // Optionally attach user if token is provided.

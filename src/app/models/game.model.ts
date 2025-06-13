@@ -93,7 +93,7 @@ const getGames = async (
     }
 
     // Filter games by reviewerId (i.e. where that user has left a review).
-    if (params.reviewerId !== null && params.reviewerId !== undefined && params.reviewerId !== 0) {
+    if (params.reviewerId !== null && params.reviewerId !== undefined) {
         conditions.push(`game.id IN (
             SELECT gr.game_id FROM game_review gr
             WHERE gr.user_id = ?
@@ -104,6 +104,9 @@ const getGames = async (
 
     // Filter by games owned by the logged-in user.
     if (params.ownedByMe) {
+        if (!params.userId) {
+            throw new Error("User ID is required for ownedByMe filter");
+        }
         conditions.push(`game.id IN (
             SELECT o.game_id FROM owned o
             WHERE o.user_id = ?
@@ -114,6 +117,9 @@ const getGames = async (
 
     // Filter by games wishlisted by the logged-in user.
     if (params.wishlistedByMe) {
+        if (!params.userId) {
+            throw new Error("User ID is required for wishlistedByMe filter");
+        }
         conditions.push(`game.id IN (
             SELECT w.game_id FROM wishlist w
             WHERE w.user_id = ?
@@ -299,9 +305,20 @@ const editGame = async (
     }
     if (updatedData.platforms !== undefined) {
         await pool.query("DELETE FROM game_platforms WHERE game_id = ?", [gameId]);
-        const insertPlatformQuery = "INSERT INTO game_platforms (game_id, platform_id) VALUES ?";
-        const platformValues = updatedData.platforms.map((platformId) => [gameId, platformId]);
-        await pool.query(insertPlatformQuery, [platformValues]);
+
+        // Handle differently based on database type
+        if (pool.dbType === 'sqlite') {
+            // For SQLite, insert rows one by one
+            for (const platformId of updatedData.platforms) {
+                const insertPlatformQuery = "INSERT INTO game_platforms (game_id, platform_id) VALUES (?, ?)";
+                await pool.query(insertPlatformQuery, [gameId, platformId]);
+            }
+        } else {
+            // For MySQL, use batch insert
+            const insertPlatformQuery = "INSERT INTO game_platforms (game_id, platform_id) VALUES ?";
+            const platformValues = updatedData.platforms.map((platformId) => [gameId, platformId]);
+            await pool.query(insertPlatformQuery, [platformValues]);
+        }
     }
 };
 
@@ -383,15 +400,19 @@ const createGame = async (
     }
 
     // Insert into game table.
+    // Use a database-agnostic approach for the current timestamp
+    const currentDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
     const insertGameQuery = `
         INSERT INTO game (title, description, creation_date, creator_id, genre_id, price)
-        VALUES (?, ?, NOW(), ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?)
     `;
     let result;
     try {
         [result] = await pool.query(insertGameQuery, [
             gameData.title,
             gameData.description,
+            currentDate,
             creatorId,
             gameData.genreId,
             gameData.price,
@@ -407,12 +428,25 @@ const createGame = async (
     const gameId = result.insertId;
 
     // Insert into game_platforms table for each platform id.
-    const insertPlatformQuery = `
-        INSERT INTO game_platforms (game_id, platform_id)
-        VALUES ?
-    `;
-    const platformValues = gameData.platformIds.map((platformId) => [gameId, platformId]);
-    await pool.query(insertPlatformQuery, [platformValues]);
+    // Handle differently based on database type
+    if (pool.dbType === 'sqlite') {
+        // For SQLite, insert rows one by one
+        for (const platformId of gameData.platformIds) {
+            const insertPlatformQuery = `
+                INSERT INTO game_platforms (game_id, platform_id)
+                VALUES (?, ?)
+            `;
+            await pool.query(insertPlatformQuery, [gameId, platformId]);
+        }
+    } else {
+        // For MySQL, use batch insert
+        const insertPlatformQuery = `
+            INSERT INTO game_platforms (game_id, platform_id)
+            VALUES ?
+        `;
+        const platformValues = gameData.platformIds.map((platformId) => [gameId, platformId]);
+        await pool.query(insertPlatformQuery, [platformValues]);
+    }
 
     return gameId;
 };

@@ -28,8 +28,9 @@ async function checkDatabaseInitialization() {
         // Initialize the database
         Logger.info('Initializing database...');
         await Backdoor.resetDb();
+        // Always resample the database when it's first created
         await Backdoor.loadData();
-        Logger.info('Database initialization complete!');
+        Logger.info('Database initialization complete with sample data!');
     } catch (err) {
         Logger.error('Error initializing database:');
         Logger.error(err);

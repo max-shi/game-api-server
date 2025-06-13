@@ -4,7 +4,7 @@ const ajv = new Ajv({removeAdditional: 'all', strict: false, allErrors: true});
 ajv.addFormat('email',/^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i)
 ajv.addFormat('password', /^.{6,}$/);
 ajv.addFormat('binary', /.*/);
-ajv.addFormat('integer', /^\d+$/)
+ajv.addFormat('integer', /^\d*$/)
 ajv.addFormat('boolean', /^(true|false)$/i)
 ajv.addFormat('datetime', /^\d\d\d\d-\d\d?-\d\d? \d\d?:\d\d?:\d\d?$/)
 

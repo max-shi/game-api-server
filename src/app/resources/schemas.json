@@ -98,27 +98,22 @@
       },
       "creatorId": {
         "type": "string",
-        "minLength": 1,
         "format": "integer"
       },
       "reviewerId": {
         "type": "string",
-        "minLength": 1,
         "format": "integer"
       },
       "startIndex": {
         "type": "string",
-        "minLength": 1,
         "format": "integer"
       },
       "count": {
         "type": "string",
-        "minLength": 1,
         "format": "integer"
       },
       "price": {
         "type": "string",
-        "minLength": 1,
         "format": "integer"
       },
       "sortBy": {
